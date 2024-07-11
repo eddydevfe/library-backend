@@ -33,7 +33,8 @@ booksRouter.post('/', async (request, response) => {
   })
   
   const savedBook = await book.save()
-  user.notes = user.books.concat(savedBook._id)
+
+  user.books = user.books.concat(savedBook._id)
   await user.save()
   
   response.status(201).json(savedBook)

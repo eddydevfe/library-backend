@@ -4,7 +4,6 @@ const supertest = require('supertest')
 const mongoose = require('mongoose')
 const helper = require('./test_helper')
 
-const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 
 const app = require('../app')
@@ -19,8 +18,7 @@ let token
 beforeEach(async () => {
   await api.post('/api/testing/reset')
 
-  const passwordHash = await bcrypt.hash('adminadmin', 10)
-  const user = new User({ username: 'root', name: 'root', password: passwordHash })
+  const user = new User({ username: 'root', name: 'root', password: 'adminadmin' })
   await user.save()
 
   const userForToken = {
@@ -31,141 +29,56 @@ beforeEach(async () => {
   token = jwt.sign(userForToken, process.env.SECRET)
 
   let books = helper.initialBooks.map(book => new Book({ ...book, user: user.id }))
-  await Book.insertMany(books)
+  const savedBooks = await Book.insertMany(books)
+
+  user.books = savedBooks.map(book => book._id)
+  await user.save()
 })
 
-describe('get requests work', () => {
+test('can create new users', async () => {
+  const user = new User({ username: 'root2', name: 'root2', password: 'adminadmin' })
+  await user.save()
 
-  test('return the correct amount of books in the json format', async () => {
-    const response = await api
-      .get('/api/books')
-      .set('Authorization', `Bearer ${token}`)
-      .expect(200)
-      .expect('Content-Type', /application\/json/)
-
-
-    assert.strictEqual(response.body.length, helper.initialBooks.length)
-  })
-
-  test('books have the "id" field instead of the default "_id" from mongodb', async () => {
-    const response = await api.get('/api/books').set('Authorization', `Bearer ${token}`)
-    assert(response.body.every(book => book.id))
-  })
-
+  const savedUser = await User.findOne({ username: 'root2' })
+  assert.strictEqual(savedUser.username, 'root2')
+  assert.strictEqual(savedUser.name, 'root2')
 })
 
-describe('post requests work', () => {
-
-  test('correctly save books to the db', async () => {
-    const response = await api
-      .post('/api/books')
-      .send(helper.individualBook)
-      .set('Authorization', `Bearer ${token}`)
-      .expect(201)
-
-    const updatedDb = await api.get('/api/books').set('Authorization', `Bearer ${token}`)
-    assert(updatedDb.body.find(book => book.id === response.body.id))
-  })
-
-})
-
-test('default to "Unknown author" if author property is missing', async () => {
-  const bookCopy = { ...helper.individualBook }
-  delete bookCopy.author
-  
+test('user has books property with ids of the books they created', async () => {
   const response = await api
-    .post('/api/books')
+    .get('/api/users')
     .set('Authorization', `Bearer ${token}`)
-    .send(bookCopy)
-    .expect(201)
-  
-  assert(response.body.author[0] === 'Unknown author')
+    .expect(200)
+    .expect('Content-Type', /application\/json/)
+
+  const user = response.body[0]
+  const books = user.books
+    
+  assert.strictEqual(books.length, helper.initialBooks.length)
 })
 
-test('return 400 bad request if title property is missing', async () => {
-  const bookCopy = { ...helper.individualBook }
-  delete bookCopy.title
+describe('fails to create user:', async () => {
 
-  const response = await api
-    .post('/api/books')
-    .send(bookCopy)
-    .set('Authorization', `Bearer ${token}`)
-    .expect(400)
-
-  assert.deepStrictEqual(response.body, { error: 'title is required' })
-})
-
-describe('delete a book from the db', () => {
-
-  test('successfully delete book from db', async () => {
-    const blogToBeDeleted = '5a422aa71b54a676234d17f8'
-
-    const response = await api
-      .get('/api/books')
-      .set('Authorization', `Bearer ${token}`)
-      .expect(200)
+  test('with short password', async () => {
+    const response = await api.post('/api/users')
+      .send({ username: 'shortie', name: 'shortie', password: 'short' })
+      .expect(400)
       .expect('Content-Type', /application\/json/)
-  
-    const bookToDelete = response.body[0].id
 
-    await api
-      .delete(`/api/books/${bookToDelete}`)
-      .set('Authorization', `Bearer ${token}`)
-      .expect(204)
-
-    await api
-      .get(`/api/books/${blogToBeDeleted}`)
-      .set('Authorization', `Bearer ${token}`)
-      .expect(404)
+    assert.deepStrictEqual(response.body, { error: 'password must have more than 8 characters' })
   })
 
-  test('return 404 if attempt to delete a book that is not in the db', async () => {
-    const bookToDelete = '5a422aa71b54a676234d17f5' // Fake id.
-    await api.delete(`/api/books/${bookToDelete}`)
-      .set('Authorization', `Bearer ${token}`)
-      .expect(404)
+  test('with missing username', async () => {
+    const response = await api.post('/api/users')
+      .send({ name: 'doe', password: 'adminadmin' })
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
+
+    assert.deepStrictEqual(response.body, { error: 'username, name and password are required' })
   })
 
 })
 
-describe('put requests work', () => {
-
-  test('update the review correctly', async () => {
-    const response = await api
-      .get('/api/books')
-      .set('Authorization', `Bearer ${token}`)
-      .expect(200)
-      .expect('Content-Type', /application\/json/)
-  
-    const bookToUpdate = response.body[0]
-
-    const updatedBook = {...bookToUpdate, review: 'It did update'}
-
-    await api
-      .put(`/api/books/${bookToUpdate.id}`)
-      .send(updatedBook)
-      .set('Authorization', `Bearer ${token}`)
-
-    const updatedResponse = await api
-      .get('/api/books')
-      .set('Authorization', `Bearer ${token}`)
-      .expect(200)
-      .expect('Content-Type', /application\/json/)
-  
-    const isReviewUpdated = updatedResponse.body.some(book => book.id === bookToUpdate.id && book.review === 'It did update')
-    assert.strictEqual(isReviewUpdated, true)
-  })
-
-  test('return 404 bad request if book doesn\'t exist or cannot be updated', async () => {
-    const bookToUpdate = '5a422aa71b54a676234d17f4' // Fake Id.
-    await api
-      .put(`/api/books/${bookToUpdate}`)
-      .send({ title: 'None' })
-      .set('Authorization', `Bearer ${token}`)
-      .expect(404)
-  })
-
-})
 
 after(async () => {
   await api.post('/api/testing/reset')
