@@ -13,6 +13,10 @@ const bookSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  pagesRead: {
+    type: Number,
+    default: 0
+  },
   publicationDate: {
     type: Date,
     default: Date.now

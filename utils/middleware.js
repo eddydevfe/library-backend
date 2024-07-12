@@ -31,6 +31,8 @@ const errorHandler = (error, request, response, next) => {
     return response.status(401).json({ error: 'token invalid' })
   case 'TokenExpiredError':
     return response.status(401).json({ error: 'token expired' })
+  case 'UserNotFoundError':
+    return response.status(401).json({ error: 'user not found' })
   }
   next(error)
 }
@@ -47,14 +49,19 @@ const tokenExtractor = (request, response, next) => {
 const userExtractor = async (request, response, next) => {
   const decodedToken = jwt.verify(request.token, process.env.SECRET)
 
+  // Error is caught by errorHandler.
   if (!decodedToken.id) {
-    return response.status(401).json({ error: 'token invalid' })
+    const error = new Error('token invalid')
+    error.name = 'TokenExpiredError'
+    throw error
   }
 
   const user = await User.findById(decodedToken.id)
   
   if (!user) {
-    return response.status(401).json({ error: 'user not found' })
+    const error = new Error('user not found')
+    error.name = 'UserNotFoundError'
+    throw error
   }
 
   request.user = user

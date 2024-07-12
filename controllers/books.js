@@ -25,6 +25,7 @@ booksRouter.post('/', async (request, response) => {
     title: body.title,
     author: body.author || undefined,
     pageCount: body.pageCount || undefined,
+    pagesRead: body.pagesRead || undefined, 
     publicationDate: body.publicationDate || undefined,
     genre: body.genre,
     score: body.score || undefined,
