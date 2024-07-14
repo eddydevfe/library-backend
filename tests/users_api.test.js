@@ -4,13 +4,9 @@ const supertest = require('supertest')
 const mongoose = require('mongoose')
 const helper = require('./test_helper')
 
-
-const jwt = require('jsonwebtoken')
-
 const app = require('../app')
 const api = supertest(app)
 
-const Book = require('../models/book')
 const User = require('../models/user')
 
 let token
@@ -93,6 +89,6 @@ describe('fails to create user:', async () => {
 
 
 after(async () => {
-  // await api.post('/api/testing/reset')
+  await api.post('/api/testing/reset')
   await mongoose.connection.close()
 })
