@@ -7,7 +7,7 @@ const requestLogger = (request, response, next) => {
   logger.info('method:', request.method)
   logger.info('path:  ', request.path)
   logger.info('body:  ', request.body)
-  logger.info('---------------------')
+  logger.info('---')
   next()
 }
 
@@ -43,16 +43,29 @@ const verifyJWT = (request, response, next) => {
   if (!authHeader) return response.sendStatus(401)
 
   const token = authHeader.split(' ')[1]
-
+  
   jwt.verify(
     token,
     process.env.ACCESS_TOKEN_SECRET,
-    (error, decoded) => {
-      if (error) return response.sendStatus(403) 
-      request.user = decoded.username
-      next()
+    async (error, decoded) => {
+      if (error) return response.sendStatus(403)
+      try {
+        const user = await User.findOne({ username: decoded.username }) 
+
+        if (!user) {
+          const error = new Error('user not found')
+          error.name = 'UserNotFoundError'
+          throw error
+        }
+        request.user = user
+        next()
+      } catch (error) {
+        console.error(error.message)
+        response.sendStatus(500)
+      }
     }
   )
+
 }
 
 module.exports = {

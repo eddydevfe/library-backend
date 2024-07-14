@@ -20,6 +20,8 @@ booksRouter.post('/', async (request, response) => {
   const body = request.body
   const user = request.user
 
+  // console.log('user:', user)
+
   if (!body.title) return response.status(400).send({ error: 'title is required' })
 
   const book = new Book({
