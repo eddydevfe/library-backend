@@ -6,8 +6,11 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-  name: String,
-  passwordHash: String,
+  refreshToken: String,
+  passwordHash: {
+    type: String,
+    required: true
+  },
   books: [
     {
       type: mongoose.Schema.Types.ObjectId,

@@ -6,7 +6,7 @@ router.post('/reset', async (request, response) => {
   await Book.deleteMany({})
   await User.deleteMany({})
 
-  response.status(204).end()
+  response.sendStatus(204)
 })
 
 module.exports = router

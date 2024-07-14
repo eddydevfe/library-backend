@@ -1,4 +1,5 @@
 const booksRouter = require('express').Router()
+
 const Book = require('../models/book')
 
 booksRouter.get('/', async (request, response) => {
@@ -11,7 +12,7 @@ booksRouter.get('/:id', async (request, response) => {
   if (book) {
     response.json(book)
   } else {
-    response.status(404).end()
+    response.sendStatus(404)
   }
 })
 
@@ -19,25 +20,25 @@ booksRouter.post('/', async (request, response) => {
   const body = request.body
   const user = request.user
 
-  if (!body.title) return response.status(400).send({error: 'title is required'}) 
-  
+  if (!body.title) return response.status(400).send({ error: 'title is required' })
+
   const book = new Book({
     title: body.title,
     author: body.author || undefined,
     pageCount: body.pageCount || undefined,
-    pagesRead: body.pagesRead || undefined, 
+    pagesRead: body.pagesRead || undefined,
     publicationDate: body.publicationDate || undefined,
     genre: body.genre,
     score: body.score || undefined,
     review: body.review || undefined,
     user: user._id
   })
-  
+
   const savedBook = await book.save()
 
   user.books = user.books.concat(savedBook._id)
   await user.save()
-  
+
   response.status(201).json(savedBook)
 })
 
@@ -65,19 +66,19 @@ booksRouter.delete('/:id', async (request, response) => {
   const bookToDelete = await Book.findById(bookId)
 
   if (!bookToDelete) {
-    return response.status(404).end()
+    return response.sendStatus(404)
   }
 
   if (bookToDelete.user.toString() !== user._id.toString()) {
-    return response.status(403).end()
+    return response.sendStatus(203)
   }
 
   const deletedBook = await Book.findByIdAndDelete(bookId)
   if (!deletedBook) {
-    return response.status(404).end()
+    return response.sendStatus(404)
   }
 
-  response.status(204).end()
+  response.sendStatus(204)
 
 })
 

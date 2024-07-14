@@ -18,7 +18,7 @@ let token
 beforeEach(async () => {
   await api.post('/api/testing/reset')
 
-  const user = new User({ username: 'root', name: 'root', password: 'adminadmin' })
+  const user = new User({ username: 'root', password: 'adminadmin' })
   await user.save()
 
   const userForToken = {

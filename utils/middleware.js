@@ -1,12 +1,13 @@
+const jwt = require('jsonwebtoken')
+require('dotenv').config()
 const logger = require('./logger')
 const User = require('../models/user')
-const jwt = require('jsonwebtoken')
 
 const requestLogger = (request, response, next) => {
   logger.info('method:', request.method)
   logger.info('path:  ', request.path)
   logger.info('body:  ', request.body)
-  logger.info('---')
+  logger.info('---------------------')
   next()
 }
 
@@ -37,42 +38,26 @@ const errorHandler = (error, request, response, next) => {
   next(error)
 }
 
-const tokenExtractor = (request, response, next) => {
-  const authorization = request.get('Authorization')
-  if(authorization && authorization.startsWith('Bearer ')){
-    request.token = authorization.replace('Bearer ', '')
-  }
+const verifyJWT = (request, response, next) => {
+  const authHeader = request.headers['authorization']
+  if (!authHeader) return response.sendStatus(401)
 
-  next()
-}
+  const token = authHeader.split(' ')[1]
 
-const userExtractor = async (request, response, next) => {
-  const decodedToken = jwt.verify(request.token, process.env.SECRET)
-
-  // Error is caught by errorHandler.
-  if (!decodedToken.id) {
-    const error = new Error('token invalid')
-    error.name = 'TokenExpiredError'
-    throw error
-  }
-
-  const user = await User.findById(decodedToken.id)
-  
-  if (!user) {
-    const error = new Error('user not found')
-    error.name = 'UserNotFoundError'
-    throw error
-  }
-
-  request.user = user
-
-  next()
+  jwt.verify(
+    token,
+    process.env.ACCESS_TOKEN_SECRET,
+    (error, decoded) => {
+      if (error) return response.sendStatus(403) 
+      request.user = decoded.username
+      next()
+    }
+  )
 }
 
 module.exports = {
   requestLogger,
   unknownEndpoint,
   errorHandler,
-  tokenExtractor,
-  userExtractor
+  verifyJWT
 }
