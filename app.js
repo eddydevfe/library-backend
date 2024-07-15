@@ -37,19 +37,18 @@ app.use(middleware.requestLogger)
 
 if (process.env.NODE_ENV === 'test') {  
   const testingRouter = require('./controllers/testing')
-  app.use('/api/testing', testingRouter)
+  app.use('/testing', testingRouter)
 }
 
-app.use('/api/login', authRouter) 
-app.use('/api/register', registerRouter) 
-app.use('/api/refresh', refreshTokenRouter) 
-app.use('/api/logout', logoutRouter)
+app.use('/register', registerRouter) 
+app.use('/login', authRouter) 
+app.use('/refresh', refreshTokenRouter) 
+app.use('/logout', logoutRouter)
 
-// EVERYTHING BELOW HERE SHOULD BE PROTECTED.
 app.use(middleware.verifyJWT)
 
-app.use('/api/users', usersRouter)
-app.use('/api/books', booksRouter)
+app.use('/users', usersRouter)
+app.use('/books', booksRouter)
 
 app.use(middleware.unknownEndpoint)
 app.use(middleware.errorHandler)

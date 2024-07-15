@@ -13,12 +13,12 @@ let cookie
 // Delete all users, create one user and 4 books under them.
 beforeEach(async () => {
   try {
-    await api.post('/api/testing/reset').expect(204)
+    await api.post('/testing/reset').expect(204)
 
     const user = { username: 'root', password: 'longpassword' }
-    await api.post('/api/register').send(user).expect(201)
+    await api.post('/register').send(user).expect(201)
 
-    const loginResponse = await api.post('/api/login').send(user)
+    const loginResponse = await api.post('/login').send(user)
 
     token = loginResponse.body.accessToken
 
@@ -28,7 +28,7 @@ beforeEach(async () => {
 
     for (const book of helper.initialBooks) {
       await api
-        .post('/api/books')
+        .post('/books')
         .set('Authorization', `Bearer ${token}`)
         .set('Cookie', cookie)
         .send(book)
@@ -45,7 +45,7 @@ describe('get requests work', () => {
 
   test('return the correct amount of books in the json format', async () => {
     const response = await api
-      .get('/api/books')
+      .get('/books')
       .set('Authorization', `Bearer ${token}`)
       .set('Cookie', cookie)
       .expect(200)
@@ -56,7 +56,7 @@ describe('get requests work', () => {
   })
 
   test('books have the "id" field instead of the default "_id" from mongodb', async () => {
-    const response = await api.get('/api/books')
+    const response = await api.get('/books')
       .set('Authorization', `Bearer ${token}`)
       .set('Cookie', cookie)
 
@@ -69,13 +69,13 @@ describe('post requests work', () => {
 
   test('correctly save books to the db', async () => {
     const response = await api
-      .post('/api/books')
+      .post('/books')
       .send(helper.individualBook)
       .set('Authorization', `Bearer ${token}`)
       .set('Cookie', cookie)
       .expect(201)
 
-    const updatedDb = await api.get('/api/books')
+    const updatedDb = await api.get('/books')
       .set('Authorization', `Bearer ${token}`)
       .set('Cookie', cookie)
     
@@ -89,7 +89,7 @@ test('default to "Unknown author" if author property is missing', async () => {
   delete bookCopy.author
 
   const response = await api
-    .post('/api/books')
+    .post('/books')
     .set('Authorization', `Bearer ${token}`)
     .set('Cookie', cookie)
     .send(bookCopy)
@@ -103,7 +103,7 @@ test('return 400 bad request if title property is missing', async () => {
   delete bookCopy.title
 
   const response = await api
-    .post('/api/books')
+    .post('/books')
     .send(bookCopy)
     .set('Authorization', `Bearer ${token}`)
     .set('Cookie', cookie)
@@ -118,7 +118,7 @@ describe('delete a book from the db', () => {
     const blogToBeDeleted = '5a422aa71b54a676234d17f8'
 
     const response = await api
-      .get('/api/books')
+      .get('/books')
       .set('Authorization', `Bearer ${token}`)
       .set('Cookie', cookie)
       .expect(200)
@@ -127,13 +127,13 @@ describe('delete a book from the db', () => {
     const bookToDelete = response.body[0].id
 
     await api
-      .delete(`/api/books/${bookToDelete}`)
+      .delete(`/books/${bookToDelete}`)
       .set('Authorization', `Bearer ${token}`)
       .set('Cookie', cookie)
       .expect(204)
 
     await api
-      .get(`/api/books/${blogToBeDeleted}`)
+      .get(`/books/${blogToBeDeleted}`)
       .set('Authorization', `Bearer ${token}`)
       .set('Cookie', cookie)
       .expect(404)
@@ -141,7 +141,7 @@ describe('delete a book from the db', () => {
 
   test('return 404 if attempt to delete a book that is not in the db', async () => {
     const bookToDelete = '5a422aa71b54a676234d17f5' // Fake id.
-    await api.delete(`/api/books/${bookToDelete}`)
+    await api.delete(`/books/${bookToDelete}`)
       .set('Authorization', `Bearer ${token}`)
       .set('Cookie', cookie)
       .expect(404)
@@ -153,7 +153,7 @@ describe('put requests work', () => {
 
   test('update the review correctly', async () => {
     const response = await api
-      .get('/api/books')
+      .get('/books')
       .set('Authorization', `Bearer ${token}`)
       .set('Cookie', cookie)
       .expect(200)
@@ -164,13 +164,13 @@ describe('put requests work', () => {
     const updatedBook = { ...bookToUpdate, review: 'It did update' }
 
     await api
-      .put(`/api/books/${bookToUpdate.id}`)
+      .put(`/books/${bookToUpdate.id}`)
       .send(updatedBook)
       .set('Authorization', `Bearer ${token}`)
       .set('Cookie', cookie)
 
     const updatedResponse = await api
-      .get('/api/books')
+      .get('/books')
       .set('Authorization', `Bearer ${token}`)
       .set('Cookie', cookie)
       .expect(200)
@@ -183,7 +183,7 @@ describe('put requests work', () => {
   test('return 404 bad request if book doesn\'t exist or cannot be updated', async () => {
     const bookToUpdate = '5a422aa71b54a676234d17f4' // Fake Id.
     await api
-      .put(`/api/books/${bookToUpdate}`)
+      .put(`/books/${bookToUpdate}`)
       .send({ title: 'None' })
       .set('Authorization', `Bearer ${token}`)
       .set('Cookie', cookie)
@@ -193,6 +193,6 @@ describe('put requests work', () => {
 })
 
 after(async () => {
-  await api.post('/api/testing/reset')
+  await api.post('/testing/reset')
   await mongoose.connection.close()
 })

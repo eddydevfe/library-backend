@@ -15,12 +15,12 @@ let cookie
 // Delete all users, create one user and 4 books under them.
 beforeEach(async () => {
   try {
-    await api.post('/api/testing/reset').expect(204)
+    await api.post('/testing/reset').expect(204)
 
     const user = { username: 'root', password: 'longpassword' }
-    await api.post('/api/register').send(user).expect(201)
+    await api.post('/register').send(user).expect(201)
 
-    const loginResponse = await api.post('/api/login').send(user)
+    const loginResponse = await api.post('/login').send(user)
 
     token = loginResponse.body.accessToken
 
@@ -30,7 +30,7 @@ beforeEach(async () => {
 
     for (const book of helper.initialBooks) {
       await api
-        .post('/api/books')
+        .post('/books')
         .set('Authorization', `Bearer ${token}`)
         .set('Cookie', cookie)
         .send(book)
@@ -46,7 +46,7 @@ beforeEach(async () => {
 
 test('can create new users', async () => {
   const user = { username: 'longerroot', password: 'longerpassword' }
-  await api.post('/api/register').send(user).expect(201)
+  await api.post('/register').send(user).expect(201)
 
   const savedUser = await User.findOne({ username: 'longerroot' })
   assert.strictEqual(savedUser.username, 'longerroot')
@@ -54,7 +54,7 @@ test('can create new users', async () => {
 
 test('user has books property with ids of the books they created', async () => {
   const response = await api
-    .get('/api/users')
+    .get('/users')
     .set('Authorization', `Bearer ${token}`)
     .set('Cookie', cookie)
     .expect(200)
@@ -68,7 +68,7 @@ test('user has books property with ids of the books they created', async () => {
 describe('fails to create user:', async () => {
 
   test('with short password', async () => {
-    const response = await api.post('/api/register')
+    const response = await api.post('/register')
       .send({ username: 'shortie', name: 'shortie', password: 'short' })
       .expect(400)
       .expect('Content-Type', /application\/json/)
@@ -77,7 +77,7 @@ describe('fails to create user:', async () => {
   })
 
   test('with missing username', async () => {
-    const response = await api.post('/api/register')
+    const response = await api.post('/register')
       .send({ password: 'nousername' })
       .expect(400)
       .expect('Content-Type', /application\/json/)
@@ -89,6 +89,6 @@ describe('fails to create user:', async () => {
 
 
 after(async () => {
-  await api.post('/api/testing/reset')
+  await api.post('/testing/reset')
   await mongoose.connection.close()
 })
