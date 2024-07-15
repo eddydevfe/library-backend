@@ -2,9 +2,9 @@ const booksRouter = require('express').Router()
 
 const Book = require('../models/book')
 
+// TODO: Make get requests only the logged in user.
 booksRouter.get('/', async (request, response) => {
-  const books = await Book.find({}).populate('user', { username: 1, name: 1 })
-  response.json(books)
+  response.json(request.user.books)
 })
 
 booksRouter.get('/:id', async (request, response) => {
@@ -19,8 +19,6 @@ booksRouter.get('/:id', async (request, response) => {
 booksRouter.post('/', async (request, response) => {
   const body = request.body
   const user = request.user
-
-  // console.log('user:', user)
 
   if (!body.title) return response.status(400).send({ error: 'title is required' })
 
