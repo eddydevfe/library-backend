@@ -2,9 +2,9 @@ const booksRouter = require('express').Router()
 
 const Book = require('../models/book')
 
-// TODO: Make get requests only the logged in user.
 booksRouter.get('/', async (request, response) => {
-  response.json(request.user.books)
+  const books = await Book.find({ '_id': { $in: request.user.books } })
+  response.json(books)
 })
 
 booksRouter.get('/:id', async (request, response) => {
