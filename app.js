@@ -38,6 +38,7 @@ app.use(middleware.requestLogger)
 if (process.env.NODE_ENV === 'test') {  
   const testingRouter = require('./controllers/testing')
   app.use('/testing', testingRouter)
+  app.use('/users', usersRouter)
 }
 
 app.use('/register', registerRouter) 
@@ -47,7 +48,6 @@ app.use('/logout', logoutRouter)
 
 app.use(middleware.verifyJWT)
 
-app.use('/users', usersRouter)
 app.use('/books', booksRouter)
 
 app.use(middleware.unknownEndpoint)

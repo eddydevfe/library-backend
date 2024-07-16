@@ -53,7 +53,7 @@ booksRouter.put('/:id', async (request, response) => {
 
   const updatedBook = await Book.findByIdAndUpdate(request.params.id, updatedBookData, { new: true })
   if (!updatedBook) {
-    return response.status(404).json({ error: 'book not found' })
+    return response.sendStatus(404)
   }
 
   response.json(updatedBook)
@@ -70,7 +70,7 @@ booksRouter.delete('/:id', async (request, response) => {
   }
 
   if (bookToDelete.user.toString() !== user._id.toString()) {
-    return response.sendStatus(203)
+    return response.sendStatus(403)
   }
 
   const deletedBook = await Book.findByIdAndDelete(bookId)

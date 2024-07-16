@@ -13,7 +13,13 @@ registerRouter.post('/', async (request, response) => {
   if (password.length < 9) return response.status(400).json(
     { error: 'password must have more than 8 characters' }
   )
-
+  
+  if (username.length < 4 || username.length > 100) {
+    return response.status(400).json(
+      { error: 'username must be between 4 and 100 characters long' }
+    )
+  }
+  
   try {
     const duplicate = await User.findOne({ username })
     if (duplicate) return response.status(409).json(
