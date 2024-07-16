@@ -7,23 +7,23 @@ registerRouter.post('/', async (request, response) => {
   const { username, password } = request.body
 
   if (!username || !password) return response.status(400).json(
-    { error: 'username and password are required.' }
+    { error: 'Username and password are both required.' }
   )
 
   if (password.length < 9) return response.status(400).json(
-    { error: 'password must have more than 8 characters' }
+    { error: 'Password must have more than 8 characters.' }
   )
   
   if (username.length < 4 || username.length > 100) {
     return response.status(400).json(
-      { error: 'username must be between 4 and 100 characters long' }
+      { error: 'Username must be between 4 and 100 characters long.' }
     )
   }
   
   try {
     const duplicate = await User.findOne({ username })
     if (duplicate) return response.status(409).json(
-      { error: 'username already exists' }
+      { error: 'This username is taken.' }
     )
 
     const saltRounds = 10

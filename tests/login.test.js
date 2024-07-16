@@ -8,10 +8,10 @@ const app = require('../app')
 
 const api = supertest(app)
 
-describe('POST /login', () => {
+describe('POST /api/login', () => {
 
   beforeEach(async () => {
-    await api.post('/testing/reset').expect(204)
+    await api.post('/api/testing/reset').expect(204)
 
     const passwordHash = await bcrypt.hash('validpassword', 10)
     const newUser = new User({ username: 'testuser', passwordHash })
@@ -19,31 +19,31 @@ describe('POST /login', () => {
   })
 
   after(async () => {
-    await api.post('/testing/reset').expect(204)
+    await api.post('/api/testing/reset').expect(204)
     await mongoose.connection.close()
   })
 
   test('return 400 if username is missing', async () => {
     const response = await api
-      .post('/login')
+      .post('/api/login')
       .send({ password: 'validpassword' })
       .expect(400)
 
-    assert.strictEqual(response.body.error, 'username and password are required.')
+    assert.strictEqual(response.body.error, 'Username and password are both required.')
   })
 
   test('return 400 if password is missing', async () => {
     const response = await api
-      .post('/login')
+      .post('/api/login')
       .send({ username: 'testuser' })
       .expect(400)
 
-    assert.strictEqual(response.body.error, 'username and password are required.')
+    assert.strictEqual(response.body.error, 'Username and password are both required.')
   })
 
   test('return 401 if username does not exist', async () => {
     const response = await api
-      .post('/login')
+      .post('/api/login')
       .send({ username: 'idontexist', password: 'validpassword' })
       .expect(401)
 
@@ -52,7 +52,7 @@ describe('POST /login', () => {
 
   test('return 401 if password is incorrect', async () => {
     const response = await api
-      .post('/login')
+      .post('/api/login')
       .send({ username: 'testuser', password: 'notmypassword' })
       .expect(401)
 
@@ -61,7 +61,7 @@ describe('POST /login', () => {
 
   test('return 200 if login is successful', async () => {
     const response = await api
-      .post('/login')
+      .post('/api/login')
       .send({ username: 'testuser', password: 'validpassword' })
       .expect(200)
 
@@ -71,7 +71,7 @@ describe('POST /login', () => {
 
   test('set refresh token cookie if login is successful', async () => {
     const response = await api
-      .post('/login')
+      .post('/api/login')
       .send({ username: 'testuser', password: 'validpassword' })
       .expect(200)
 

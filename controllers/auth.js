@@ -5,12 +5,11 @@ const bcrypt = require('bcrypt')
 const User = require('../models/user')
 require('dotenv').config()
 
-
 authRouter.post('/', async (request, response) => {
   const { username, password } = request.body
 
   if (!username || !password) return response.status(400).json(
-    { error: 'username and password are required.' }
+    { error: 'Username and password are both required.' }
   )
 
   const foundUser = await User.findOne({ username })
