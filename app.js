@@ -47,9 +47,10 @@ app.use('/api/login', authRouter)
 app.use('/api/refresh', refreshTokenRouter) 
 app.use('/api/logout', logoutRouter)
 
-app.use(middleware.verifyJWT)
+// app.use(middleware.verifyJWT)
+// app.use('/api/books', booksRouter)
 
-app.use('/api/books', booksRouter)
+app.use('/api/books', middleware.verifyJWT, booksRouter)
 
 app.use(middleware.unknownEndpoint) // Some requests don't reach this because of the verifyJWT.
 app.use(middleware.errorHandler)
