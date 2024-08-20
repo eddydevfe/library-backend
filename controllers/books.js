@@ -30,7 +30,6 @@ booksRouter.post('/', async (request, response) => {
     publicationDate: body.publicationDate || undefined,
     genre: body.genre,
     score: body.score || undefined,
-    review: body.review || undefined,
     user: user._id
   })
 

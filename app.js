@@ -28,31 +28,28 @@ mongoose
     logger.error('error connection to MongoDB:', error.message)
   })
 
-// app.use(express.static('dist')) // No frontend yet.
+app.use(express.static('dist'))
 app.use(cors())
 app.use(express.json())
 app.use(cookieParser())
-app.use(middleware.requestLogger)   
 
 if (process.env.NODE_ENV === 'test') {  
   const testingRouter = require('./controllers/testing')
   const usersRouter = require('./controllers/users')
-
+  
   app.use('/api/testing', testingRouter)
   app.use('/api/users', usersRouter)
 }
 
-app.use('/api/register', registerRouter) 
-app.use('/api/login', authRouter) 
+app.use('/api/register', registerRouter)
+app.use('/api/login', authRouter) // TODO: ???
+
 app.use('/api/refresh', refreshTokenRouter) 
 app.use('/api/logout', logoutRouter)
 
-// app.use(middleware.verifyJWT)
-// app.use('/api/books', booksRouter)
-
 app.use('/api/books', middleware.verifyJWT, booksRouter)
 
-app.use(middleware.unknownEndpoint) // Some requests don't reach this because of the verifyJWT.
+app.use(middleware.unknownEndpoint)
 app.use(middleware.errorHandler)
 
 module.exports = app

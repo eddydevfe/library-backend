@@ -21,6 +21,7 @@ registerRouter.post('/', async (request, response) => {
   }
   
   try {
+    // TODO: This can be checked in the user model with mongooseUniqueValidator.
     const duplicate = await User.findOne({ username })
     if (duplicate) return response.status(409).json(
       { error: 'This username is taken.' }

@@ -13,7 +13,7 @@ authRouter.post('/', async (request, response) => {
   )
 
   const foundUser = await User.findOne({ username })
-  if (!foundUser) return response.sendStatus(401)
+  if (!foundUser) return response.sendStatus(404)
 
   const match = await bcrypt.compare(password, foundUser.passwordHash)
 
